@@ -1,9 +1,19 @@
 package main
 
 import (
-	menu "github.com/hawschiat/go-snake/internal/menu"
+	"github.com/eiannone/keyboard"
+	Game "github.com/hawschiat/go-snake/internal/game"
 )
 
 func main() {
-	menu.LaunchMenu()
+	keysEvents, err := keyboard.GetKeys(1)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		_ = keyboard.Close()
+	}()
+
+	Game.LaunchMenu(keysEvents)
 }
