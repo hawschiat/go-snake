@@ -80,9 +80,8 @@ func printMenu(
 				i += 7
 			} else if i == menuRow {
 				printMenuText(selectedIndex == 0, "Start Game", width)
-				printMenuText(selectedIndex == 1, "Info", width)
-				printMenuText(selectedIndex == 2, "Quit", width)
-				i += 2
+				printMenuText(selectedIndex == 1, "Quit", width)
+				i++
 			} else {
 				fmt.Println("|" + strings.Repeat(" ", width-2) + "|")
 			}
@@ -121,7 +120,7 @@ func listenNavigate(
 				menuIndex <- index
 			}
 		case keyboard.KeyArrowDown:
-			if index < 2 {
+			if index < 1 {
 				index++
 				menuIndex <- index
 			}
@@ -130,7 +129,7 @@ func listenNavigate(
 			case 0:
 				shouldLaunchGame <- true
 				return
-			case 2:
+			case 1:
 				exitGame <- true
 				return
 			}
