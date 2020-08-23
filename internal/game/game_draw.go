@@ -7,14 +7,11 @@ import (
 	"github.com/inancgumus/screen"
 )
 
-func sameCoordinate(a coordinate, b coordinate) bool {
-	return a.X == b.X && a.Y == b.Y
-}
-
 func drawGame(state *gameState, width int, height int) {
 	screen.MoveTopLeft()
+	fmt.Println(fmt.Sprintf("Score: %-10d", 0), fmt.Sprintf("%[1]*s", width-10, "Press \033[1mESC\033[0m for menu."))
 	fmt.Println(strings.Repeat("-", width))
-	for row := 1; row < height-1; row++ {
+	for row := 2; row < height-1; row++ {
 		fmt.Println("|" + strings.Repeat(" ", width-2) + "|")
 	}
 	fmt.Println(strings.Repeat("-", width))

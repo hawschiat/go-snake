@@ -11,6 +11,50 @@ import (
 	Util "github.com/hawschiat/go-snake/internal/utilities"
 )
 
+func listenMenuControl(
+	ctx context.Context,
+	keysEvents <-chan keyboard.KeyEvent,
+	menuIndex chan<- int,
+	menuCommand chan<- string,
+) {
+	index := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case event, ok := <-keysEvents:
+			if !ok {
+				return
+			}
+			if event.Err != nil {
+				panic(event.Err)
+			}
+			// Determine action based on input
+			switch event.Key {
+			case keyboard.KeyArrowUp:
+				if index > 0 {
+					index--
+					menuIndex <- index
+				}
+			case keyboard.KeyArrowDown:
+				if index < 1 {
+					index++
+					menuIndex <- index
+				}
+			case keyboard.KeyEnter:
+				switch index {
+				case 0:
+					menuCommand <- "resume"
+				case 1:
+					menuCommand <- "quit"
+					return
+				}
+			}
+		}
+	}
+}
+
 func printInGameMenuText(active bool, s string, width int, y int, x int) {
 	fmt.Print(fmt.Sprintf("\033[%d;%dH", y, x))
 	if active {
@@ -39,23 +83,22 @@ func showInGameMenu(keysEvents <-chan keyboard.KeyEvent, width int, height int) 
 
 	go listenMenuControl(ctx, keysEvents, menuIndex, menuCommand)
 
+	defer cancel()
+
 	for {
 		select {
 		case selectedIndex, ok = <-menuIndex:
 		case command := <-menuCommand:
 			switch command {
 			case "resume":
-				cancel()
 				return
 			case "quit":
-				cancel()
 				return
 			}
 		default:
 		}
 
 		if !ok {
-			cancel()
 			return
 		}
 
@@ -80,49 +123,5 @@ func showInGameMenu(keysEvents <-chan keyboard.KeyEvent, width int, height int) 
 		fmt.Print(fmt.Sprintf("\033[%d;%dH", startCoordinate.Y+offset, startCoordinate.X))
 		fmt.Print(strings.Repeat("\u2581", menuWidth))
 		time.Sleep(time.Second / Const.Fps)
-	}
-}
-
-func listenMenuControl(
-	ctx context.Context,
-	keysEvents <-chan keyboard.KeyEvent,
-	menuIndex chan<- int,
-	menuCommand chan<- string,
-) {
-	index := 0
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case event, ok := <-keysEvents:
-			if !ok {
-				return
-			}
-			if event.Err != nil {
-				panic(event.Err)
-			}
-			// Determine action based on input
-			switch event.Key {
-			case keyboard.KeyArrowUp:
-				if index > 0 {
-					index--
-					menuIndex <- index
-				}
-			case keyboard.KeyArrowDown:
-				if index < 2 {
-					index++
-					menuIndex <- index
-				}
-			case keyboard.KeyEnter:
-				switch index {
-				case 0:
-					menuCommand <- "resume"
-				case 1:
-					menuCommand <- "quit"
-					return
-				}
-			}
-		}
 	}
 }

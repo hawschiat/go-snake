@@ -4,10 +4,10 @@ package internal
 const Fps = 60
 
 // InitialSpeed defines the initial speed of snake in fps
-const InitialSpeed = 10
+const InitialSpeed = 1
 
 // MaxSpeed defines the max speed of snake in fps
-const MaxSpeed = 30
+const MaxSpeed = 10
 
 // InitialLength defines the initial length of snake
 const InitialLength = 3
