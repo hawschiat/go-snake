@@ -64,7 +64,7 @@ func printInGameMenuText(active bool, s string, width int, y int, x int) {
 	}
 }
 
-func showInGameMenu(keysEvents <-chan keyboard.KeyEvent, width int, height int) {
+func showInGameMenu(keysEvents <-chan keyboard.KeyEvent, width int, height int, gameOver *bool) {
 	menuIndex := make(chan int)
 	menuCommand := make(chan string)
 
@@ -93,6 +93,7 @@ func showInGameMenu(keysEvents <-chan keyboard.KeyEvent, width int, height int) 
 			case "resume":
 				return
 			case "quit":
+				*gameOver = true
 				return
 			}
 		default:

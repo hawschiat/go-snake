@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"time"
@@ -23,13 +24,26 @@ type gameState struct {
 	score           int
 	direction       string
 	snakeHead       *snakePart
+	snakeLength     int
 }
 
 func sameCoordinate(a coordinate, b coordinate) bool {
 	return a.X == b.X && a.Y == b.Y
 }
 
-func advanceGame(state *gameState, gameOver chan bool, width int, height int) {
+func snakeBittenItself(head *snakePart) bool {
+	currentCheck := head.nextPart
+	for currentCheck != nil {
+		if sameCoordinate(head.coordinate, currentCheck.coordinate) {
+			return true
+		}
+		currentCheck = currentCheck.nextPart
+	}
+	return false
+}
+
+func advanceGame(state *gameState, gameOver *bool, width int, height int) {
+	scoreMultiplier := 1
 	fruitEaten := false
 	currentHeadCoord := state.snakeHead.coordinate
 	newHeadCoord := coordinate{}
@@ -53,13 +67,25 @@ func advanceGame(state *gameState, gameOver chan bool, width int, height int) {
 
 	if newHeadCoord.X < 0 || newHeadCoord.Y < 0 ||
 		newHeadCoord.X > width || newHeadCoord.Y > height {
-		gameOver <- true
+		*gameOver = true
 		return
 	}
 
 	if sameCoordinate(newHeadCoord, state.fruitCoordinate) {
-		currentHead := state.snakeHead
-		state.snakeHead = &snakePart{newHeadCoord, currentHead}
+		if state.snakeLength >= Const.MaxLength {
+			scoreMultiplier++
+		} else {
+			currentHead := state.snakeHead
+			state.snakeHead = &snakePart{newHeadCoord, currentHead}
+			state.snakeLength++
+
+			// Adjust speed based on length
+			if state.snakeLength < 5 {
+				state.speed = 5
+			} else {
+				state.speed = state.snakeLength
+			}
+		}
 		fruitEaten = true
 	} else {
 		// Move each blocks towards the next coordinates
@@ -73,9 +99,14 @@ func advanceGame(state *gameState, gameOver chan bool, width int, height int) {
 		}
 	}
 
+	if snakeBittenItself(state.snakeHead) {
+		*gameOver = true
+		return
+	}
+
 	if fruitEaten {
 		// Add points
-		state.score += 10
+		state.score += 10 * scoreMultiplier * (state.speed / 5)
 
 		// Generate new location for fruit
 		newCoord := coordinate{}
@@ -118,6 +149,7 @@ func initializeGame(state *gameState, width int, height int) {
 
 	state.fruitCoordinate = coordinate{startingPoint.X, startingPoint.Y - 2}
 	state.snakeHead = &head
+	state.snakeLength = Const.InitialLength
 	state.speed = Const.InitialSpeed
 	state.direction = "up"
 	state.score = 0
@@ -125,77 +157,70 @@ func initializeGame(state *gameState, width int, height int) {
 
 // LaunchGame initializes and launches the Snake game
 func LaunchGame(keysEvents <-chan keyboard.KeyEvent, width int, height int) {
-	gameOver := make(chan bool)
 	gamePause := make(chan bool)
 	direction := make(chan string)
 
 	fmt.Print("\033[?25l") // Hides cursor
 
+	state := gameState{}
+	initializeGame(&state, width, height-2)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go listenGameControl(ctx, keysEvents, direction, gamePause)
+
 	defer func() {
-		close(gameOver)
-		fmt.Print("\033[?25h") // Shows cursor
-		LaunchMenu(keysEvents)
+		cancel()
+		displayGameOverBox(keysEvents, width, height, state.score)
 	}()
 
-	state := gameState{}
-	initializeGame(&state, width, height)
-
-	go listenGameControl(keysEvents, direction, gamePause, gameOver)
-
-	go func(gamePause chan bool, gameOver chan bool) {
-		defer close(gamePause)
-
-		paused := false
-		for {
-			event := <-keysEvents
-			if event.Err != nil {
-				panic(event.Err)
-			}
-			if event.Key == keyboard.KeyEsc {
-				paused = !paused
-				gamePause <- paused
-			}
-			if event.Key == keyboard.KeyEnter {
-				gameOver <- true
-				return
-			}
-		}
-	}(gamePause, gameOver)
-
+	over := false
 	paused := false
 	advanceCountdown := 0
+	hasChangedDirection := false // Safety mechanism to prevent spamming direction command
 
 	for {
 		select {
 		case paused = <-gamePause:
 		case dir := <-direction:
-			if state.direction == "up" || state.direction == "down" {
-				if dir == "left" || dir == "right" {
-					state.direction = dir
+			if !hasChangedDirection {
+				if state.direction == "up" || state.direction == "down" {
+					if dir == "left" || dir == "right" {
+						state.direction = dir
+						hasChangedDirection = true
+					}
+				} else if state.direction == "left" || state.direction == "right" {
+					if dir == "up" || dir == "down" {
+						state.direction = dir
+						hasChangedDirection = true
+					}
+				} else {
+					panic("I don't know where the snake is heading")
 				}
-			} else if state.direction == "left" || state.direction == "right" {
-				if dir == "up" || dir == "down" {
-					state.direction = dir
-				}
-			} else {
-				panic("I don't know where the snake is heading")
 			}
-		case <-gameOver:
-			return
 		default:
-			break
 		}
 
 		drawGame(&state, width, height)
 		if paused {
-			showInGameMenu(keysEvents, width, height)
+			showInGameMenu(keysEvents, width, height, &over)
+			if over {
+				return
+			}
+			paused = false
+			gamePause <- false
 		}
 
 		if advanceCountdown == 0 {
-			advanceGame(&state, gameOver, width, height)
+			advanceGame(&state, &over, width, height-2)
 			advanceCountdown = 60
+			hasChangedDirection = false
 		} else {
 			advanceCountdown -= state.speed
+		}
+
+		if over {
+			return
 		}
 
 		time.Sleep(time.Second / Const.Fps)

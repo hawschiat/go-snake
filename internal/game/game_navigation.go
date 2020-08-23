@@ -1,17 +1,20 @@
 package game
 
 import (
+	"context"
+
 	"github.com/eiannone/keyboard"
 )
 
 func listenGameControl(
+	ctx context.Context,
 	keysEvents <-chan keyboard.KeyEvent,
 	direction chan string,
-	gamePause <-chan bool,
-	gameOver chan bool,
+	gamePause chan bool,
 ) {
 	defer func() {
 		close(direction)
+		close(gamePause)
 	}()
 
 	paused := false
@@ -21,6 +24,8 @@ func listenGameControl(
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case paused = <-gamePause:
 		case event, ok := <-keysEvents:
 			if !ok {
@@ -29,6 +34,7 @@ func listenGameControl(
 			if event.Err != nil {
 				panic(event.Err)
 			}
+
 			// Handles navigation if game is not paused
 			if !paused {
 				// Determine action based on input
@@ -53,10 +59,11 @@ func listenGameControl(
 						dir = "right"
 						direction <- dir
 					}
+				case keyboard.KeyEsc:
+					paused = true
+					gamePause <- true
 				}
 			}
-		case <-gameOver:
-			return
 		default:
 		}
 	}
