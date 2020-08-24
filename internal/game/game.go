@@ -78,11 +78,10 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 			currentHead := state.snakeHead
 			state.snakeHead = &snakePart{newHeadCoord, currentHead}
 			state.snakeLength++
-
-			// Adjust speed
-			if state.snakeLength > 5 {
-				state.speed++
-			}
+		}
+		// Adjust speed
+		if state.snakeLength > 5 {
+			state.speed++
 		}
 		fruitEaten = true
 	} else {
@@ -199,7 +198,7 @@ func LaunchGame(keysEvents <-chan keyboard.KeyEvent, width int, height int) {
 		default:
 		}
 
-		if advanceCountdown == 0 {
+		if advanceCountdown <= 0 {
 			advanceGame(&state, &over, width, height)
 			advanceCountdown = Const.Fps
 			hasChangedDirection = false
