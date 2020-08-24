@@ -9,7 +9,8 @@ import (
 	"github.com/inancgumus/screen"
 )
 
-const heightOffset = 2
+const yOffset = 1
+const xOffset = 1
 
 func drawGame(state *gameState, width int, height int) {
 	screen.MoveTopLeft()
@@ -22,7 +23,7 @@ func drawGame(state *gameState, width int, height int) {
 
 	// Draw fruit
 	fruitCoord := state.fruitCoordinate
-	fmt.Print(fmt.Sprintf("\033[%d;%dH", fruitCoord.Y+heightOffset, fruitCoord.X))
+	fmt.Print(fmt.Sprintf("\033[%d;%dH", fruitCoord.Y+yOffset, fruitCoord.X+xOffset))
 	fmt.Print("\u2591")
 
 	// Draw snake body
@@ -30,11 +31,10 @@ func drawGame(state *gameState, width int, height int) {
 	for currentPart != nil {
 		coord := currentPart.coordinate
 		// Move cursor to the coordinate
-		fmt.Print(fmt.Sprintf("\033[%d;%dH", coord.Y+heightOffset, coord.X))
+		fmt.Print(fmt.Sprintf("\033[%d;%dH", coord.Y+yOffset, coord.X+xOffset))
 		fmt.Print("\u2588")
 		currentPart = currentPart.nextPart
 	}
-	screen.MoveTopLeft()
 }
 
 func displayGameOverBox(keysEvents <-chan keyboard.KeyEvent, width int, height int, finalScore int) {

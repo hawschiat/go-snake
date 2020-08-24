@@ -1,7 +1,7 @@
-package internal
+package constants
 
 // Fps defines frames per second
-const Fps = 60
+const Fps = 25
 
 // InitialSpeed defines the initial speed of snake in fps
 const InitialSpeed = 5

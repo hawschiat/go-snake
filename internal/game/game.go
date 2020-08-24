@@ -65,8 +65,8 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 		panic("I don't know where the snake is heading")
 	}
 
-	if newHeadCoord.X < 0 || newHeadCoord.Y < 0 ||
-		newHeadCoord.X > width || newHeadCoord.Y > height {
+	if newHeadCoord.X <= 0 || newHeadCoord.Y <= 0 ||
+		newHeadCoord.X >= width || newHeadCoord.Y >= height {
 		*gameOver = true
 		return
 	}
@@ -79,11 +79,9 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 			state.snakeHead = &snakePart{newHeadCoord, currentHead}
 			state.snakeLength++
 
-			// Adjust speed based on length
-			if state.snakeLength < 5 {
-				state.speed = 5
-			} else {
-				state.speed = state.snakeLength
+			// Adjust speed
+			if state.snakeLength > 5 {
+				state.speed++
 			}
 		}
 		fruitEaten = true
@@ -114,8 +112,8 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 
 		for !locationDecided {
 			newCoord = coordinate{
-				rand.Intn(width - 1),
-				rand.Intn(height - 1),
+				(width * 25 / 100) + rand.Intn(width*60/100),
+				(height * 25 / 100) + rand.Intn(height*60/100),
 			}
 			locationDecided = true
 
@@ -147,7 +145,7 @@ func initializeGame(state *gameState, width int, height int) {
 		currentPart = currentPart.nextPart
 	}
 
-	state.fruitCoordinate = coordinate{startingPoint.X, startingPoint.Y - 2}
+	state.fruitCoordinate = coordinate{startingPoint.X, startingPoint.Y - 5}
 	state.snakeHead = &head
 	state.snakeLength = Const.InitialLength
 	state.speed = Const.InitialSpeed
@@ -201,22 +199,19 @@ func LaunchGame(keysEvents <-chan keyboard.KeyEvent, width int, height int) {
 		default:
 		}
 
-		drawGame(&state, width, height)
-		if paused {
-			showInGameMenu(keysEvents, width, height, &over)
-			if over {
-				return
-			}
-			paused = false
-			gamePause <- false
-		}
-
 		if advanceCountdown == 0 {
-			advanceGame(&state, &over, width, height-2)
-			advanceCountdown = 60
+			advanceGame(&state, &over, width, height)
+			advanceCountdown = Const.Fps
 			hasChangedDirection = false
 		} else {
 			advanceCountdown -= state.speed
+		}
+
+		drawGame(&state, width, height)
+		if paused {
+			showInGameMenu(keysEvents, width, height, &over)
+			paused = false
+			gamePause <- false
 		}
 
 		if over {
