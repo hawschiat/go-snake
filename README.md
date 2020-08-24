@@ -10,7 +10,7 @@ To run the program, you can clone the repository and run it. See the following g
 
 1. Make sure you have Go installed on your machine. ([See how](https://golang.org/doc/install))
 2. Clone this repository.
-3. Run `go run cmd/snake/main.go` in the project directory.
+3. Run `go run .` in the project directory.
 
 ## Motivation
 
