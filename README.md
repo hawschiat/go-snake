@@ -4,7 +4,7 @@ Go implementation of the Snake game. Fully in-terminal.
 
 ![Preview](doc/preview.gif)
 
-To run the program, you cann either download the binary executable or clone the repository and run it. See the following guide on how to do it.
+To run the program, you can clone the repository and run it. See the following guide on how to do it.
 
 ## Run with source code
 
@@ -19,3 +19,7 @@ I started this project because I want to learn about Go. I had several project i
 ## Process
 
 The project took me a weekend to finish. Not only did I learn a lot about Goroutines, but I also learned a lot about [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code), which is heavily used in the printing operations.
+
+## Known Issues
+
+- The game stops advancing after obtaining 30 points (after eating 3 fruits). Menu can still be opened however.
