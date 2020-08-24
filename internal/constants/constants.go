@@ -3,11 +3,11 @@ package constants
 // Fps defines frames per second
 const Fps = 25
 
-// InitialSpeed defines the initial speed of snake in fps
+// InitialSpeed defines the initial speed of snake
 const InitialSpeed = 5
 
-// MaxSpeed defines the max speed of snake in fps
-const MaxSpeed = 40
+// MaxSpeed defines the max speed of snake
+const MaxSpeed = 60
 
 // InitialLength defines the initial length of snake
 const InitialLength = 3

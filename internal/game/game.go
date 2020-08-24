@@ -80,7 +80,7 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 			state.snakeLength++
 		}
 		// Adjust speed
-		if state.snakeLength > 5 {
+		if state.snakeLength > 5 && state.speed < Const.MaxSpeed {
 			state.speed++
 		}
 		fruitEaten = true
@@ -103,7 +103,7 @@ func advanceGame(state *gameState, gameOver *bool, width int, height int) {
 
 	if fruitEaten {
 		// Add points
-		state.score += 10 * scoreMultiplier * (state.speed / 5)
+		state.score += 5 * scoreMultiplier * (state.speed / Const.InitialSpeed)
 
 		// Generate new location for fruit
 		newCoord := coordinate{}
